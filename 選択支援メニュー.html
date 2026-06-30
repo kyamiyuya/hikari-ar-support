@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>選択支援メニュー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<script src="error_guard.js"></script>
+<script src="menu_data.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    color: #2f2a24;
+    background: #f7f4ee;
+  }
+  header {
+    padding: 18px clamp(16px, 4vw, 36px);
+    background: #fbfaf6;
+    border-bottom: 1px solid #ded8cc;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .topbar {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+  h1 { margin: 0; font-size: clamp(22px, 4vw, 34px); line-height: 1.25; }
+  .sub { margin-top: 4px; color: #6f6559; font-size: 14px; }
+  .primary {
+    border: 0;
+    border-radius: 8px;
+    background: #2f6f73;
+    color: white;
+    font-weight: 900;
+    padding: 12px 18px;
+    min-height: 48px;
+    cursor: pointer;
+  }
+  .count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 28px;
+    margin-left: 8px;
+    border-radius: 999px;
+    background: #fff;
+    color: #2f6f73;
+  }
+  main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 18px clamp(14px, 4vw, 36px) 48px;
+  }
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .tab {
+    border: 1px solid #d8d0c4;
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px 10px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .tab.active { background: #2f6f73; color: #fff; border-color: #2f6f73; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .panel-head {
+    margin-bottom: 16px;
+    padding: 18px;
+    background: #fff;
+    border: 1px solid #ded8cc;
+    border-radius: 8px;
+  }
+  .panel-head h2 { margin: 0 0 6px; font-size: 24px; }
+  .panel-head p { margin: 0; color: #655c51; }
+  .stage {
+    background: #fff;
+    border: 1px solid #ded8cc;
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .prompt {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .prompt strong { font-size: clamp(20px, 4vw, 34px); }
+  .open-ar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border-radius: 8px;
+    min-height: 48px;
+    padding: 12px 18px;
+    background: #c65f3a;
+    color: #fff;
+    font-weight: 900;
+  }
+  .marker-cards, .three-grid, .anim-grid, .print-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .marker-card, .three-card, .anim-card, .print-choice {
+    border: 1px solid #ded8cc;
+    background: #fff;
+    border-radius: 8px;
+    padding: 14px;
+    min-height: 170px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .marker-card.active, .three-card.selected, .anim-card.selected { outline: 4px solid rgba(47,111,115,.28); }
+  .mini-marker {
+    width: 94px;
+    aspect-ratio: 1;
+    margin: 0 auto 10px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 8px solid #111;
+    background: #111;
+    gap: 2px;
+  }
+  .mini-marker span { background: #111; }
+  .mini-marker .on { background: #fff; }
+  .ar-preview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .ar-food {
+    display: grid;
+    place-items: center;
+    min-height: 240px;
+    background: linear-gradient(#fdfbf7, #efe8db);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ar-food::after {
+    content: '';
+    position: absolute;
+    width: 62%;
+    height: 34px;
+    bottom: 36px;
+    border-radius: 50%;
+    background: rgba(0,0,0,.16);
+    filter: blur(4px);
+  }
+  .ar-food img {
+    width: min(220px, 72%);
+    z-index: 1;
+    filter: drop-shadow(0 24px 18px rgba(0,0,0,.18));
+    animation: floatFood 2.8s ease-in-out infinite alternate;
+  }
+  .ar-label { font-size: 24px; font-weight: 900; text-align: center; }
+  .ar-label small { display: block; font-size: 14px; color: #71675c; }
+  .three-card { position: relative; overflow: hidden; }
+  .three-card .shadow {
+    display: block;
+    width: 70%;
+    height: 26px;
+    margin: 116px auto -108px;
+    border-radius: 50%;
+    background: rgba(0,0,0,.18);
+    filter: blur(5px);
+  }
+  .plate {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 132px;
+    height: 132px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    background: linear-gradient(#fff, #eee1ce);
+    box-shadow: inset 0 -10px 18px rgba(0,0,0,.08), 0 20px 24px rgba(0,0,0,.14);
+    transform: rotateX(18deg);
+  }
+  .plate img { width: 94px; height: 94px; border-radius: 50%; object-fit: cover; }
+  .gloss {
+    position: absolute;
+    width: 40px;
+    height: 24px;
+    right: 30px;
+    top: 24px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.26);
+  }
+  .steam {
+    position: absolute;
+    width: 10px;
+    height: 42px;
+    top: -30px;
+    border-radius: 999px;
+    background: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.55), rgba(255,255,255,0));
+    animation: steam 3.5s ease-in-out infinite;
+  }
+  .three-card strong, .anim-card strong, .print-choice strong { display: block; font-size: 18px; }
+  .three-card small, .anim-card small, .print-choice small { color: #6f6559; }
+  .spin-controls { margin-top: 14px; display: flex; gap: 10px; }
+  .secondary {
+    border: 1px solid #d8d0c4;
+    border-radius: 8px;
+    background: #fff;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .print-choice { cursor: default; min-height: 220px; }
+  .print-choice img, .anim-card img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+  .print-choice .number {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #2f6f73;
+    color: #fff;
+    font-weight: 900;
+    margin-bottom: 8px;
+  }
+  .result-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%) translateY(120px);
+    background: #2f2a24;
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 8px;
+    z-index: 50;
+    transition: transform .25s;
+  }
+  .result-toast.show { transform: translateX(-50%) translateY(0); }
+  .picker-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+  }
+  .picker-modal.open { display: block; }
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.42);
+  }
+  .picker-inner {
+    position: absolute;
+    inset: auto 12px 12px;
+    max-width: 1040px;
+    margin: auto;
+    background: #fbfaf6;
+    border-radius: 8px;
+    padding: 16px;
+    max-height: min(86vh, 760px);
+    overflow: auto;
+  }
+  .picker-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .picker-header h2 { margin: 0; }
+  .close-btn {
+    border: 0;
+    background: #2f2a24;
+    color: #fff;
+    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .selected-bar-slots { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .selected-chip {
+    background: #fff;
+    border: 1px solid #ded8cc;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-weight: 700;
+  }
+  .picker-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .category-filter {
+    border: 1px solid #ded8cc;
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: left;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .category-filter.active { background: #2f6f73; color: #fff; }
+  .category-filter span, .category-filter small { margin-left: 6px; }
+  .picker-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 10px;
+  }
+  .picker-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #ded8cc;
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .picker-item.selected { outline: 4px solid rgba(47,111,115,.26); }
+  .picker-item img { width: 62px; height: 62px; border-radius: 8px; object-fit: cover; }
+  .picker-item strong, .picker-item small { display: block; }
+  .picker-item small { color: #6f6559; }
+  @keyframes floatFood { to { transform: translateY(-10px); } }
+  @keyframes steam { 0% { opacity: 0; transform: translateY(10px); } 35% { opacity: .7; } 100% { opacity: 0; transform: translateY(-28px); } }
+  @media (max-width: 720px) {
+    .topbar, .prompt, .ar-preview { display: block; }
+    .primary, .open-ar { width: 100%; margin-top: 12px; }
+    .tabs { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media print {
+    header, .tabs, .panel-head, .prompt, .spin-controls, .picker-modal, .result-toast { display: none !important; }
+    body { background: #fff; }
+    .panel { display: none !important; }
+    #p3 { display: block !important; }
+    .stage { border: 0; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <div>
+      <h1>選択支援メニュー</h1>
+      <div class="sub">50メニュー・14カテゴリから、1〜3個を選んで比較できます。</div>
+    </div>
+    <button class="primary" id="openPicker">メニューを選ぶ <span class="count-pill" id="countPill">0/3</span></button>
+  </div>
+</header>
+
+<main>
+  <nav class="tabs" aria-label="表示方式">
+    <button class="tab active" data-panel="p1" type="button">WebAR</button>
+    <button class="tab" data-panel="p2" type="button">3D立体</button>
+    <button class="tab" data-panel="p3" type="button">印刷カード</button>
+    <button class="tab" data-panel="p4" type="button">アニメメニュー</button>
+  </nav>
+
+  <section class="panel active" id="p1">
+    <div class="panel-head">
+      <h2>WebAR</h2>
+      <p>Hiroマーカーを使い、選んだ料理を左右に立体表示します。</p>
+    </div>
+    <div class="stage">
+      <div class="prompt">
+        <strong>どれにしますか？</strong>
+        <a class="open-ar" href="WebAR本番.html">本番ARを起動する</a>
+      </div>
+      <div class="ar-preview">
+        <div class="ar-food"><img id="arFoodImg" alt=""></div>
+        <div>
+          <div class="ar-label" id="arLabel"></div>
+          <div id="arMarker" class="mini-marker"></div>
+        </div>
+      </div>
+      <div class="marker-cards" id="markerCards"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p2">
+    <div class="panel-head">
+      <h2>3D立体ビューア</h2>
+      <p>くるくる回さず、影・質感・湯気で「そこにある感じ」を見せます。</p>
+    </div>
+    <div class="stage">
+      <div class="prompt"><strong>見比べて選びます</strong></div>
+      <div class="three-grid" id="spinGrid"></div>
+      <div class="spin-controls">
+        <button class="secondary" id="spinConfirm" disabled type="button">これにする</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p3">
+    <div class="panel-head">
+      <h2>印刷カード</h2>
+      <p>機器を使わない支援用に、選んだメニューだけを印刷できます。</p>
+    </div>
+    <div class="stage">
+      <div class="prompt">
+        <strong>今日の候補</strong>
+        <button class="primary" type="button" onclick="window.print()">印刷する</button>
+      </div>
+      <div id="printDate"></div>
+      <div class="print-grid" id="printGrid"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p4">
+    <div class="panel-head">
+      <h2>アニメメニュー</h2>
+      <p>動きで注目しやすくしながら、選択肢を絞って提示します。</p>
+    </div>
+    <div class="stage">
+      <div class="prompt"><strong>好きなものをタップ</strong></div>
+      <div class="anim-grid" id="animGrid"></div>
+    </div>
+  </section>
+</main>
+
+<div class="picker-modal" id="pickerModal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="picker-inner" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+    <div class="picker-header">
+      <h2 id="pickerTitle">メニューを選ぶ</h2>
+      <button class="close-btn" id="closePicker" type="button" aria-label="閉じる">×</button>
+    </div>
+    <div class="selected-bar-slots" id="selectedBarSlots"></div>
+    <div class="picker-categories" id="pickerCategories"></div>
+    <div class="picker-items" id="pickerItems"></div>
+    <div style="margin-top:12px; display:flex; gap:10px; justify-content:flex-end;">
+      <button class="secondary" id="clearBtn" type="button">最初の3件に戻す</button>
+    </div>
+  </div>
+</div>
+
+<div class="result-toast" id="resultToast" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>
