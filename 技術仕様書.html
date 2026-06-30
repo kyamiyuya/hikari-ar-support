@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>技術仕様書 - 選択支援メニューシステム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=M+PLUS+Rounded+1c:wght@500;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="error_guard.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+    background: #FFF8F0;
+    color: #3D2E1F;
+    line-height: 1.7;
+  }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: #3D2E1F;
+    color: #FFE8CC;
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar .title { font-size: 16px; font-weight: 800; }
+  .topbar .back {
+    background: #C85A2B;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #4A5D8E 0%, #2D3A5A 100%);
+    color: #fff;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .hero h1 {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 8px;
+  }
+  .hero .icon {
+    font-size: 50px;
+    margin-bottom: 10px;
+  }
+
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 30px 22px 60px;
+  }
+
+  .section {
+    margin-bottom: 40px;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: #3D2E1F;
+    margin-bottom: 14px;
+    padding: 12px 18px;
+    background: linear-gradient(90deg, #E8E8F5 0%, transparent 100%);
+    border-left: 6px solid #4A5D8E;
+    border-radius: 0 12px 12px 0;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 900;
+    color: #4A5D8E;
+    margin: 18px 0 8px;
+  }
+  h4 {
+    font-size: 14px;
+    font-weight: 800;
+    color: #3D2E1F;
+    margin: 14px 0 6px;
+  }
+
+  p {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .info-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 14px 0;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  }
+
+  .pretty-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    margin: 14px 0;
+    font-size: 13px;
+  }
+  .pretty-table th {
+    background: #4A5D8E;
+    color: #fff;
+    padding: 10px;
+    text-align: left;
+    font-weight: 800;
+    font-size: 12px;
+  }
+  .pretty-table td {
+    padding: 10px;
+    border-bottom: 1px solid #F0E4D0;
+    vertical-align: top;
+  }
+  .pretty-table tr:nth-child(even) td { background: #F8F8FC; }
+  .pretty-table code {
+    background: #F0F0F5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #C85A2B;
+  }
+
+  .code-block {
+    background: #1E1E2E;
+    color: #E0E0F0;
+    padding: 16px 18px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 12px 0;
+    white-space: pre;
+  }
+  .code-block .c { color: #6B7280; }
+  .code-block .k { color: #F687B3; }
+  .code-block .s { color: #A7F3D0; }
+  .code-block .n { color: #FBD38D; }
+
+  .architecture-diagram {
+    background: #1E1E2E;
+    color: #A7F3D0;
+    padding: 20px;
+    border-radius: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .feature-matrix {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 14px 0;
+  }
+  .feature-item {
+    background: #fff;
+    padding: 14px;
+    border-radius: 10px;
+    border-left: 4px solid #4A5D8E;
+  }
+  .feature-item .name {
+    font-size: 13px;
+    font-weight: 900;
+    color: #3D2E1F;
+    margin-bottom: 4px;
+  }
+  .feature-item .detail {
+    font-size: 12px;
+    color: #5D4E3C;
+  }
+
+  .notice {
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .notice.info {
+    background: #E8F4FF;
+    border-left: 4px solid #4A9FE8;
+    color: #1D4A6A;
+  }
+  .notice.warn {
+    background: #FFF0E0;
+    border-left: 4px solid #E8A53F;
+    color: #8B5A2B;
+  }
+  .notice code {
+    background: rgba(0,0,0,0.1);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    margin-left: 6px;
+  }
+  .badge.ok { background: #4CD964; color: #fff; }
+  .badge.warn { background: #E8A53F; color: #fff; }
+
+  @media print {
+    .topbar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="title">⚙️ 技術仕様書</div>
+  <a class="back" href="index.html">← トップに戻る</a>
+</div>
+
+<div class="hero">
+  <div class="icon">⚙️</div>
+  <h1>技術仕様書</h1>
+  <div>システム構造・技術スタック・カスタマイズ方法</div>
+</div>
+
+<div class="container">
+
+  <!-- System Overview -->
+  <div class="section">
+    <h2 class="section-title">🏗️ システム概要</h2>
+
+    <p>選択支援メニューシステムは、<b>HTMLとJavaScript</b>のみで構成された軽量なWebアプリケーションです。サーバー不要で動作し、静的ファイル配信のみで運用できます。</p>
+
+    <h3>アーキテクチャ</h3>
+    <div class="architecture-diagram">
+┌─────────────────────────────────────────────────┐
+│              タブレット / スマホ                 │
+│  ┌───────────────────────────────────────────┐  │
+│  │        ブラウザ (Safari / Chrome)          │  │
+│  │  ┌─────────────────────────────────────┐  │  │
+│  │  │     選択支援メニュー.html            │  │  │
+│  │  │   （4案切替のメインUI）              │  │  │
+│  │  └────────────┬────────────────────────┘  │  │
+│  │               ↓                            │  │
+│  │  ┌─────────────────────────────────────┐  │  │
+│  │  │    WebAR本番.html (AR機能)           │  │  │
+│  │  │  ┌─────────────────────────────┐    │  │  │
+│  │  │  │  AR.js + A-Frame (CDN)       │    │  │  │
+│  │  │  │  ↓                           │    │  │  │
+│  │  │  │  カメラ API (getUserMedia)   │    │  │  │
+│  │  │  │  ↓                           │    │  │  │
+│  │  │  │  マーカー認識 + 3D描画       │    │  │  │
+│  │  │  └─────────────────────────────┘    │  │  │
+│  │  └─────────────────────────────────────┘  │  │
+│  │  ┌─────────────────────────────────────┐  │  │
+│  │  │  menu_data.js（メニュー20種類）      │  │  │
+│  │  │  app.js（メニュー選択ロジック）       │  │  │
+│  │  └─────────────────────────────────────┘  │  │
+│  └───────────────────────────────────────────┘  │
+│                                                   │
+│  永続化: localStorage（カメラ設定・選択メニュー）  │
+└─────────────────────────────────────────────────┘
+    </div>
+  </div>
+
+  <!-- Technology Stack -->
+  <div class="section">
+    <h2 class="section-title">🛠️ 技術スタック</h2>
+
+    <table class="pretty-table">
+      <tr>
+        <th>技術</th>
+        <th>バージョン</th>
+        <th>役割</th>
+      </tr>
+      <tr>
+        <td><b>HTML5</b></td>
+        <td>-</td>
+        <td>画面構造</td>
+      </tr>
+      <tr>
+        <td><b>CSS3</b></td>
+        <td>-</td>
+        <td>デザイン・アニメーション</td>
+      </tr>
+      <tr>
+        <td><b>JavaScript (ES6+)</b></td>
+        <td>-</td>
+        <td>ロジック・イベント処理</td>
+      </tr>
+      <tr>
+        <td><b>A-Frame</b></td>
+        <td>1.5.0</td>
+        <td>WebVR/AR 3Dシーン構築</td>
+      </tr>
+      <tr>
+        <td><b>AR.js</b></td>
+        <td>3.4.5</td>
+        <td>画像マーカー認識・AR機能</td>
+      </tr>
+      <tr>
+        <td><b>Zen Maru Gothic</b></td>
+        <td>-</td>
+        <td>日本語フォント（Google Fonts）</td>
+      </tr>
+      <tr>
+        <td><b>M PLUS Rounded 1c</b></td>
+        <td>-</td>
+        <td>補助フォント（Google Fonts）</td>
+      </tr>
+    </table>
+
+    <h3>外部依存</h3>
+    <table class="pretty-table">
+      <tr>
+        <th>用途</th>
+        <th>URL</th>
+      </tr>
+      <tr>
+        <td>A-Frame CDN</td>
+        <td><code>https://aframe.io/releases/1.5.0/aframe.min.js</code></td>
+      </tr>
+      <tr>
+        <td>AR.js CDN</td>
+        <td><code>https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js</code></td>
+      </tr>
+      <tr>
+        <td>Google Fonts</td>
+        <td><code>https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic...</code></td>
+      </tr>
+      <tr>
+        <td>食べ物画像</td>
+        <td>Pexels, Wikimedia Commons, Rawpixel等のフリー素材</td>
+      </tr>
+    </table>
+
+    <div class="notice warn">
+      <b>⚠️ 注意：</b>外部CDNが使用できない場合はライブラリの読込に失敗します。施設のネットワーク管理者にドメインの許可を確認してください。
+    </div>
+  </div>
+
+  <!-- File Structure -->
+  <div class="section">
+    <h2 class="section-title">📁 ファイル構成の詳細</h2>
+
+    <table class="pretty-table">
+      <tr>
+        <th>ファイル</th>
+        <th>役割</th>
+        <th>編集頻度</th>
+      </tr>
+      <tr>
+        <td><code>index.html</code></td>
+        <td>引き継ぎ資料のトップページ</td>
+        <td>低</td>
+      </tr>
+      <tr>
+        <td><code>選択支援メニュー.html</code></td>
+        <td>メインアプリ（4案切替）</td>
+        <td>中</td>
+      </tr>
+      <tr>
+        <td><code>WebAR本番.html</code></td>
+        <td>AR機能（カメラ使用）</td>
+        <td>中</td>
+      </tr>
+      <tr>
+        <td><code>マーカー印刷.html</code></td>
+        <td>マーカー印刷ページ</td>
+        <td>低</td>
+      </tr>
+      <tr>
+        <td><code>menu_data.js</code></td>
+        <td>メニューデータベース（50種類・14カテゴリ）</td>
+        <td><b>高</b></td>
+      </tr>
+      <tr>
+        <td><code>app.js</code></td>
+        <td>メニュー選択ロジック</td>
+        <td>中</td>
+      </tr>
+      <tr>
+        <td><code>運用マニュアル.html</code></td>
+        <td>職員向け使い方</td>
+        <td>低</td>
+      </tr>
+      <tr>
+        <td><code>技術仕様書.html</code></td>
+        <td>このページ</td>
+        <td>低</td>
+      </tr>
+      <tr>
+        <td><code>トラブルシューティング.html</code></td>
+        <td>FAQ</td>
+        <td>低</td>
+      </tr>
+      <tr>
+        <td><code>WebAR使い方ガイド.html</code></td>
+        <td>背景情報</td>
+        <td>低</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Customization -->
+  <div class="section">
+    <h2 class="section-title">🔧 カスタマイズ方法</h2>
+
+    <h3>1. メニュー画像を差し替える</h3>
+    <p><code>menu_data.js</code> の各アイテムの <code>image</code> プロパティを変更します。</p>
+
+    <div class="code-block"><span class="c">// menu_data.js</span>
+<span class="k">window</span>.MENU_ITEMS = [
+  {
+    id: <span class="s">'shoyu_ramen'</span>,
+    name: <span class="s">'醤油ラーメン'</span>,
+    image: <span class="s">'https://...'</span>,  <span class="c">// ← ここを変更</span>
+    ...
+  },
+  ...
+];</div>
+
+    <div class="notice info">
+      <b>💡 画像の用意方法：</b><br>
+      • 施設で撮影した写真をアップロードし、そのURLを使う<br>
+      • AI画像生成サービス（Meshy.ai等）で作成<br>
+      • フリー素材サイト（Unsplash, Pexels等）から選ぶ<br>
+      • 画像URLが http:// の場合は https:// が必要（HTTPS必須）
+    </div>
+
+    <h3>2. メニューを追加する</h3>
+    <p><code>menu_data.js</code> の配列に新しいオブジェクトを追加します。</p>
+
+    <div class="code-block">{
+  id: <span class="s">'original_menu1'</span>,           <span class="c">// 一意のID</span>
+  name: <span class="s">'当施設特製○○'</span>,         <span class="c">// 表示名</span>
+  reading: <span class="s">'とくせい○○'</span>,        <span class="c">// ふりがな</span>
+  romaji: <span class="s">'Tokusei XX'</span>,         <span class="c">// ローマ字（任意）</span>
+  category: <span class="s">'和食'</span>,              <span class="c">// カテゴリ</span>
+  emoji: <span class="s">'🍱'</span>,                   <span class="c">// 絵文字</span>
+  image: <span class="s">'https://...'</span>,         <span class="c">// 画像URL</span>
+  tags: [<span class="s">'やさしい'</span>, <span class="s">'あたたかい'</span>] <span class="c">// タグ</span>
+}</div>
+
+    <h3>3. カテゴリを追加する</h3>
+    <p><code>menu_data.js</code> 末尾の <code>MENU_CATEGORIES</code> に追加します。</p>
+
+    <div class="code-block">{
+  id: <span class="s">'スイーツ'</span>,
+  label: <span class="s">'スイーツ'</span>,
+  emoji: <span class="s">'🍰'</span>,
+  color: <span class="s">'#E8789F'</span>
+}</div>
+
+    <h3>4. ARで使う料理を変更する</h3>
+    <p><code>WebAR本番.html</code> 内の <code>FOOD_MENU</code> 配列を編集します。</p>
+
+    <div class="code-block"><span class="k">const</span> FOOD_MENU = [
+  {
+    id: <span class="s">'ramen'</span>,
+    name: <span class="s">'ラーメン'</span>,
+    markerType: <span class="s">'preset'</span>,      <span class="c">// 'preset' または 'barcode'</span>
+    markerPreset: <span class="s">'hiro'</span>,      <span class="c">// Hiroマーカー使用</span>
+    color: <span class="n">0xE8A53F</span>,
+    image: <span class="s">'https://...'</span>
+  },
+  {
+    id: <span class="s">'curry'</span>,
+    name: <span class="s">'カレーライス'</span>,
+    markerType: <span class="s">'barcode'</span>,
+    markerValue: <span class="n">10</span>,            <span class="c">// バーコード番号</span>
+    color: <span class="n">0xB8722F</span>,
+    image: <span class="s">'https://...'</span>
+  }
+]</div>
+
+    <div class="notice warn">
+      <b>⚠️ マーカーの制約：</b><br>
+      • <code>preset</code> は <code>hiro</code> のみ動作確認済み（<code>kanji</code> は画像読込に失敗）<br>
+      • <code>barcode</code> は 0〜63 の範囲で指定可能<br>
+      • 最大3〜5マーカーまでが実用範囲（それ以上は認識が不安定）
+    </div>
+
+    <h3>5. 色・デザインを変更する</h3>
+    <p>各HTMLファイルの <code>&lt;style&gt;</code> セクションを編集します。主要カラー：</p>
+
+    <table class="pretty-table">
+      <tr>
+        <th>カラー変数</th>
+        <th>色コード</th>
+        <th>用途</th>
+      </tr>
+      <tr>
+        <td>メインブランド</td>
+        <td><code>#C85A2B</code></td>
+        <td>ボタン・強調色（オレンジ）</td>
+      </tr>
+      <tr>
+        <td>ダークブラウン</td>
+        <td><code>#3D2E1F</code></td>
+        <td>文字色・ヘッダー</td>
+      </tr>
+      <tr>
+        <td>アクセント</td>
+        <td><code>#FFD4A8</code></td>
+        <td>ハイライト・背景</td>
+      </tr>
+      <tr>
+        <td>ベージュ</td>
+        <td><code>#FFF8F0</code></td>
+        <td>ページ背景</td>
+      </tr>
+      <tr>
+        <td>成功色</td>
+        <td><code>#4CD964</code></td>
+        <td>OK・チェック</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Browser Support -->
+  <div class="section">
+    <h2 class="section-title">🌐 動作環境・ブラウザサポート</h2>
+
+    <table class="pretty-table">
+      <tr>
+        <th>環境</th>
+        <th>WebARを含む全機能</th>
+        <th>AR以外の機能</th>
+      </tr>
+      <tr>
+        <td>iPhone / iPad (Safari)</td>
+        <td><span class="badge ok">完全対応</span></td>
+        <td><span class="badge ok">完全対応</span></td>
+      </tr>
+      <tr>
+        <td>Android (Chrome)</td>
+        <td><span class="badge ok">完全対応</span></td>
+        <td><span class="badge ok">完全対応</span></td>
+      </tr>
+      <tr>
+        <td>Windows PC (Chrome)</td>
+        <td><span class="badge ok">対応</span></td>
+        <td><span class="badge ok">対応</span></td>
+      </tr>
+      <tr>
+        <td>Windows PC (Edge)</td>
+        <td><span class="badge ok">対応</span></td>
+        <td><span class="badge ok">対応</span></td>
+      </tr>
+      <tr>
+        <td>Mac (Safari)</td>
+        <td><span class="badge ok">対応</span></td>
+        <td><span class="badge ok">対応</span></td>
+      </tr>
+      <tr>
+        <td>Firefox</td>
+        <td><span class="badge warn">動作不安定</span></td>
+        <td><span class="badge ok">対応</span></td>
+      </tr>
+      <tr>
+        <td>Internet Explorer</td>
+        <td>❌ 非対応</td>
+        <td>❌ 非対応</td>
+      </tr>
+    </table>
+
+    <h3>動作要件</h3>
+    <ul style="padding-left:22px; font-size:13px;">
+      <li><b>HTTPS接続必須</b>（カメラAPIの要件）</li>
+      <li><b>JavaScript有効</b></li>
+      <li><b>カメラアクセス許可</b></li>
+      <li><b>インターネット接続</b>（初回ライブラリ読込時）</li>
+    </ul>
+  </div>
+
+  <!-- Markers -->
+  <div class="section">
+    <h2 class="section-title">🎯 マーカーの技術仕様</h2>
+
+    <h3>現在使用しているマーカー</h3>
+    <table class="pretty-table">
+      <tr>
+        <th>食べ物</th>
+        <th>マーカー種別</th>
+        <th>識別子</th>
+      </tr>
+      <tr>
+        <td>🍜 ラーメン</td>
+        <td>Preset (Hiro)</td>
+        <td><code>preset="hiro"</code></td>
+      </tr>
+      <tr>
+        <td>🍛 カレーライス</td>
+        <td>Barcode</td>
+        <td><code>type="barcode" value="10"</code></td>
+      </tr>
+      <tr>
+        <td>🍣 おすし</td>
+        <td>Barcode</td>
+        <td><code>type="barcode" value="5"</code></td>
+      </tr>
+    </table>
+
+    <h3>バーコードマーカーの仕組み</h3>
+    <p>AR.jsのバーコードマーカーは、3×3グリッドの白黒パターンで表現されます。0〜63までの値（6ビット）を持つことができます。</p>
+
+    <div class="code-block"><span class="c">// バーコードマトリックスの構造</span>
+<span class="c">// [0,0,0]  ← 行0</span>
+<span class="c">// [0,0,0]  ← 行1</span>
+<span class="c">// [1,0,1]  ← 行2 = 値5</span>
+
+<span class="c">// 検出設定（WebAR本番.html内）</span>
+arjs=<span class="s">"sourceType: webcam;
+     detectionMode: mono_and_matrix;
+     matrixCodeType: 3x3;"</span></div>
+
+    <div class="notice info">
+      <b>💡 マーカー追加の方法：</b>新しい食べ物を追加する場合は、<code>markerValue</code> を他の値（例：20, 25, 30）に設定します。同じ値を複数の料理に割り当てないよう注意してください。
+    </div>
+  </div>
+
+  <!-- Storage -->
+  <div class="section">
+    <h2 class="section-title">💾 データ永続化</h2>
+
+    <p>このシステムは <b>localStorage</b> を使用してデータを保存します。サーバーは使用しません。</p>
+
+    <table class="pretty-table">
+      <tr>
+        <th>キー</th>
+        <th>保存内容</th>
+        <th>用途</th>
+      </tr>
+      <tr>
+        <td><code>senshakuSelectedIds</code></td>
+        <td>選んだメニューID 配列</td>
+        <td>メイン画面の選択状態</td>
+      </tr>
+      <tr>
+        <td><code>senshakuPanel</code></td>
+        <td>選択中のタブID（p1〜p4）</td>
+        <td>4案の表示状態</td>
+      </tr>
+      <tr>
+        <td><code>webar_camera_facing</code></td>
+        <td><code>"environment"</code> または <code>"user"</code></td>
+        <td>カメラ向き設定</td>
+      </tr>
+      <tr>
+        <td><code>webar_autostart</code>（SessionStorage）</td>
+        <td>カメラ切替時の自動起動フラグ</td>
+        <td>再起動時の動作</td>
+      </tr>
+    </table>
+
+    <div class="notice warn">
+      <b>⚠️ 注意：</b>localStorageはブラウザ単位で保存されます。別の端末やシークレットモードでは設定が引き継がれません。
+    </div>
+  </div>
+
+  <!-- Future -->
+  <div class="section">
+    <h2 class="section-title">🚀 今後の拡張可能性</h2>
+
+    <div class="feature-matrix">
+      <div class="feature-item">
+        <div class="name">🎙️ 音声読み上げ</div>
+        <div class="detail">Web Speech APIで「これはラーメンです」と読み上げる機能を追加可能</div>
+      </div>
+      <div class="feature-item">
+        <div class="name">♿ 感覚過敏モード</div>
+        <div class="detail">アニメーションOFF・コントラスト調整スイッチを追加</div>
+      </div>
+      <div class="feature-item">
+        <div class="name">📊 選択履歴CSV</div>
+        <div class="detail">誰がいつ何を選んだかを記録・支援記録に活用</div>
+      </div>
+      <div class="feature-item">
+        <div class="name">📸 写真アップロード</div>
+        <div class="detail">施設独自メニューの写真を職員が登録できる機能</div>
+      </div>
+      <div class="feature-item">
+        <div class="name">🌐 多言語対応</div>
+        <div class="detail">英語・中国語などの表示切替</div>
+      </div>
+      <div class="feature-item">
+        <div class="name">🎨 3Dモデル対応</div>
+        <div class="detail">AI生成3Dモデル（.glbファイル）を浮遊させる</div>
+      </div>
+      <div class="feature-item">
+        <div class="name">🔔 プッシュ通知</div>
+        <div class="detail">昼食時間にタブレットに通知を出す</div>
+      </div>
+      <div class="feature-item">
+        <div class="name">👤 利用者プロフィール</div>
+        <div class="detail">アレルギー・好み・宗教上の制約を記録</div>
+      </div>
+    </div>
+
+    <div class="notice info">
+      <b>💡 開発依頼について：</b>追加開発が必要な場合、HTML/JavaScript が扱える制作会社・個人開発者に依頼できます。オープンな技術（A-Frame + AR.js）を使用しているため、多くの開発者が対応可能です。
+    </div>
+  </div>
+
+  <!-- License -->
+  <div class="section">
+    <h2 class="section-title">📜 ライセンス・利用条件</h2>
+
+    <table class="pretty-table">
+      <tr>
+        <th>要素</th>
+        <th>ライセンス</th>
+      </tr>
+      <tr>
+        <td>A-Frame</td>
+        <td>MIT License（商用利用可）</td>
+      </tr>
+      <tr>
+        <td>AR.js</td>
+        <td>MIT License（商用利用可）</td>
+      </tr>
+      <tr>
+        <td>Google Fonts (Zen Maru Gothic, M PLUS Rounded 1c)</td>
+        <td>SIL Open Font License（商用利用可）</td>
+      </tr>
+      <tr>
+        <td>食べ物画像</td>
+        <td>各配布元の利用規約に準拠（Pexels, Wikimedia等はCC0/CC-BY）</td>
+      </tr>
+      <tr>
+        <td>このシステム本体</td>
+        <td>障害者支援施設での利用を前提</td>
+      </tr>
+    </table>
+
+    <div class="notice warn">
+      <b>⚠️ 画像の権利について：</b>現在使用している食べ物画像はフリー素材ですが、正式運用時には施設で撮影したオリジナル画像への差し替えを推奨します。
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
