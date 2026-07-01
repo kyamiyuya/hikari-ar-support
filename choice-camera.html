@@ -172,49 +172,102 @@
     outline: 4px solid rgba(47,111,115,.24);
   }
   .three-card img, .anim-card img, .print-choice img {
-    width: 150px;
-    height: 150px;
+    width: 170px;
+    height: 170px;
     object-fit: contain;
   }
   .three-card {
     position: relative;
     overflow: hidden;
+    min-height: 330px;
+    padding: 18px 14px 20px;
+    background:
+      radial-gradient(circle at 50% 22%, rgba(255,255,255,.9), transparent 34%),
+      linear-gradient(160deg, #fffaf0, #eadfcd);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 18px 36px rgba(63,44,27,.12);
   }
   .plate {
     position: relative;
     display: grid;
     place-items: center;
-    min-height: 180px;
+    min-height: 218px;
+    transform: perspective(700px) rotateX(9deg) translateY(-4px);
   }
   .shadow {
     position: absolute;
-    left: 22%;
-    right: 22%;
-    top: 160px;
-    height: 18px;
+    left: 15%;
+    right: 15%;
+    top: 188px;
+    height: 28px;
     border-radius: 999px;
-    background: rgba(0,0,0,.18);
-    filter: blur(8px);
+    background: rgba(31,22,14,.22);
+    filter: blur(12px);
+  }
+  .food-photo {
+    position: relative;
+    z-index: 2;
+    width: min(210px, 86%);
+    height: auto;
+    border-radius: 24px;
+    filter:
+      drop-shadow(0 22px 18px rgba(35,25,15,.22))
+      drop-shadow(0 4px 0 rgba(255,255,255,.4));
+    transform: translateY(-10px);
   }
   .gloss {
     position: absolute;
-    inset: 22px 40px auto auto;
-    width: 46px;
-    height: 20px;
+    z-index: 3;
+    inset: 24px 42px auto auto;
+    width: 58px;
+    height: 22px;
     border-radius: 999px;
     background: rgba(255,255,255,.55);
+    filter: blur(1px);
   }
   .steam {
     position: absolute;
-    top: 10px;
+    z-index: 1;
+    top: 4px;
     width: 10px;
-    height: 52px;
+    height: 60px;
     border-radius: 999px;
     background: linear-gradient(to top, rgba(255,255,255,0), rgba(255,255,255,.8));
     animation: steam 2.4s infinite ease-in-out;
   }
+  .steam.s2 { left: 42%; animation-delay: .45s; opacity: .75; }
+  .steam.s3 { right: 40%; animation-delay: .9s; opacity: .6; }
   .spin-controls { margin-top: 14px; text-align: right; }
   #printDate { margin: 8px 0 14px; color: #655c51; }
+  .print-choice {
+    position: relative;
+    overflow: hidden;
+    padding: 18px;
+    min-height: 312px;
+    background:
+      radial-gradient(circle at 50% 22%, rgba(255,255,255,.95), transparent 36%),
+      linear-gradient(160deg, #fffdf7, #efe4d5);
+  }
+  .print-choice img {
+    display: block;
+    width: min(230px, 90%);
+    height: auto;
+    margin: 6px auto 10px;
+    border-radius: 24px;
+    filter: drop-shadow(0 18px 16px rgba(37,27,16,.18));
+  }
+  .print-choice strong,
+  .three-card strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 22px;
+  }
+  .print-choice small,
+  .three-card small {
+    display: block;
+    margin-top: 4px;
+    color: #665b4d;
+    font-weight: 700;
+  }
   .print-choice .number {
     display: inline-grid;
     place-items: center;
