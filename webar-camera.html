@@ -318,6 +318,7 @@
   let targetSide = 'left';
   let markerVisible = { left: false, right: false };
   let arRunning = false;
+  let cameraWatchTimer = null;
 
   function savedIds() {
     try {
@@ -530,17 +531,17 @@
   }
 
   function sceneHtml() {
-    const facing = cameraMode() === 'user' ? 'user' : 'environment';
+    const selectedAssets = [items[current.left], items[current.right]].filter(Boolean);
     return `
       <a-scene
         id="arScene"
         embedded
-        renderer="alpha: true; antialias: true; precision: mediump"
+        renderer="alpha: true; antialias: true; precision: mediump; powerPreference: low-power"
         vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: true"
-        arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false; detectionMode: mono; maxDetectionRate: 30;">
+        arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false; detectionMode: mono; maxDetectionRate: 15; sourceWidth: 640; sourceHeight: 480; displayWidth: 640; displayHeight: 480;">
         <a-assets>
-          ${items.map((item) => `<img id="tex-${item.id}" src="${item.image}" crossorigin="anonymous">`).join('')}
+          ${selectedAssets.map((item) => `<img id="tex-${item.id}" src="${item.image}" crossorigin="anonymous">`).join('')}
         </a-assets>
         <a-marker preset="hiro" id="marker-left" emitevents="true">${foodEntity(items[current.left], 'left')}</a-marker>
         <a-marker preset="hiro" id="marker-right" emitevents="true">${foodEntity(items[current.right], 'right')}</a-marker>
@@ -567,67 +568,74 @@
       video.setAttribute('webkit-playsinline', '');
       video.muted = true;
       video.autoplay = true;
+      video.play?.().catch(() => {});
     });
   }
 
-  async function requestCameraOnce() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new Error('このブラウザはカメラ機能に対応していません。SafariまたはChromeの最新版で開いてください。');
+  function clearCameraWatch() {
+    if (cameraWatchTimer) {
+      window.clearTimeout(cameraWatchTimer);
+      cameraWatchTimer = null;
     }
-    const facing = cameraMode() === 'user' ? 'user' : 'environment';
-    const attempts = [
-      { video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
-      { video: { facingMode: facing }, audio: false },
-      { video: true, audio: false }
-    ];
-    let lastError;
-    for (const constraints of attempts) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        stream.getTracks().forEach((track) => track.stop());
-        return true;
-      } catch (error) {
-        lastError = error;
-      }
-    }
-    if (lastError && lastError.name === 'NotAllowedError') {
-      throw new Error('カメラが許可されていません。ブラウザのサイト設定でカメラを許可してください。');
-    }
-    if (lastError && lastError.name === 'NotFoundError') {
-      throw new Error('利用できるカメラが見つかりませんでした。別の端末またはブラウザで確認してください。');
-    }
-    throw new Error('カメラを起動できませんでした。ページを再読み込みし、もう一度AR起動を押してください。');
   }
 
-  async function startAR() {
+  function cameraReady() {
+    return Array.from(document.querySelectorAll('video')).some((video) => {
+      return video.readyState >= 2 || (video.videoWidth > 0 && video.videoHeight > 0);
+    });
+  }
+
+  function watchCameraStartup() {
+    clearCameraWatch();
+    [500, 1200, 2400, 4200].forEach((delay) => {
+      window.setTimeout(() => {
+        if (!arRunning) return;
+        applyMobileVideoFixes();
+        if (cameraReady()) setStatus('マーカーをカメラに映してください');
+      }, delay);
+    });
+    cameraWatchTimer = window.setTimeout(() => {
+      if (!arRunning || cameraReady()) return;
+      setStatus('カメラ読み込み待ち');
+      setHelp('カメラが出ない場合は「閉じる」を押してから、もう一度AR起動を押してください。改善しない場合はSafari/Chromeのカメラ許可を確認してください。');
+    }, 12000);
+  }
+
+  function startAR() {
     if (arRunning) return;
     const button = document.getElementById('startAR');
+    if (!window.isSecureContext) {
+      setHelp('カメラはHTTPSのURLでのみ安定して動作します。現在のページURLを確認してください。');
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setHelp('このブラウザはカメラ機能に対応していません。SafariまたはChromeの最新版で開いてください。');
+      return;
+    }
     button.disabled = true;
-    button.textContent = 'カメラ確認中...';
-    setHelp('カメラ許可の確認中です。許可ダイアログが出たら「許可」を選んでください。');
-    try {
-      await requestCameraOnce();
-      document.body.classList.add('ar-active');
-      setStatus('カメラを起動しています');
-      document.getElementById('arHost').innerHTML = sceneHtml();
-      arRunning = true;
-      window.setTimeout(() => {
-        bindMarkerEvents();
-        applyMobileVideoFixes();
-        setStatus('マーカーをカメラに映してください');
-      }, 900);
-      refreshLabels();
-    } catch (error) {
-      setHelp(error.message);
-      alert(error.message);
-    } finally {
+    button.textContent = 'AR起動中...';
+    setHelp('カメラ許可が出たら「許可」を選んでください。読み込みが止まった場合は閉じて再起動できます。');
+    closeAR();
+    document.body.classList.add('ar-active');
+    setStatus('カメラを起動しています');
+    document.getElementById('arHost').innerHTML = sceneHtml();
+    arRunning = true;
+    watchCameraStartup();
+    window.setTimeout(() => {
+      bindMarkerEvents();
+      applyMobileVideoFixes();
+      if (!cameraReady()) setStatus('カメラ許可を確認中');
+    }, 900);
+    refreshLabels();
+    window.setTimeout(() => {
       button.disabled = false;
       button.textContent = 'カメラを許可してAR起動';
-    }
+    }, 700);
   }
 
   function closeAR() {
     document.body.classList.remove('ar-active');
+    clearCameraWatch();
     stopCameraTracks();
     document.getElementById('arHost').innerHTML = '';
     markerVisible = { left: false, right: false };
@@ -723,8 +731,22 @@
     alert(`候補を確認しました。\n左: ${left}\n右: ${right}`);
   });
 
-  window.addEventListener('pagehide', stopCameraTracks);
+  window.addEventListener('pagehide', closeAR);
   window.addEventListener('beforeunload', stopCameraTracks);
+  window.addEventListener('error', (event) => {
+    if (!arRunning) return;
+    const message = String(event.message || '');
+    if (message.includes('Permission') || message.includes('camera') || message.includes('getUserMedia')) {
+      setHelp('カメラ起動でエラーが出ました。ブラウザのカメラ許可を確認し、閉じるを押して再起動してください。');
+    }
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    if (!arRunning) return;
+    const reason = String(event.reason?.message || event.reason || '');
+    if (reason.includes('Permission') || reason.includes('camera') || reason.includes('getUserMedia')) {
+      setHelp('カメラ起動でエラーが出ました。ブラウザのカメラ許可を確認し、閉じるを押して再起動してください。');
+    }
+  });
   document.getElementById('cameraToggle').textContent = `カメラ: ${cameraMode() === 'environment' ? 'アウト' : 'イン'}`;
   refreshLabels();
 })();
