@@ -100,9 +100,11 @@
       <button class="three-card" type="button" data-id="${item.id}">
         <span class="shadow"></span>
         <span class="plate">
-          <img src="${item.image}" alt="${item.name}">
+          <img class="food-photo" src="${item.image}" alt="${item.name}">
           <span class="gloss"></span>
           <span class="steam"></span>
+          <span class="steam s2"></span>
+          <span class="steam s3"></span>
         </span>
         <strong>${item.name}</strong>
         <small>${item.reading}</small>
@@ -172,7 +174,7 @@
     const bar = $('#selectedBarSlots');
     if (!bar) return;
     bar.innerHTML = selectedItems().map((item) => `
-      <span class="selected-chip">${item.emoji} ${item.name}</span>
+      <span class="selected-chip">${item.name}</span>
     `).join('');
   }
 
@@ -208,7 +210,7 @@
     if (!target) return;
     target.innerHTML = window.MENU_CATEGORIES.map((cat) => {
       const count = allItems().filter((item) => item.category === cat.id).length;
-      return `<button type="button" class="category-filter" data-category="${cat.id}">${cat.emoji}<span>${cat.label}</span><small>${count}</small></button>`;
+      return `<button type="button" class="category-filter" data-category="${cat.id}"><span>${cat.label}</span><small>${count}</small></button>`;
     }).join('');
     $$('#pickerCategories .category-filter').forEach((button) => {
       button.addEventListener('click', () => {
