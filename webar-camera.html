@@ -123,7 +123,7 @@
     right: 10px;
     z-index: 130;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: auto auto 1fr;
     gap: 8px;
     pointer-events: none;
   }
@@ -132,7 +132,8 @@
     border: 0;
     border-radius: 15px;
     background: rgba(255,255,255,.94);
-    min-height: 46px;
+    min-height: 42px;
+    padding: 8px 12px;
     font-weight: 900;
   }
   .status {
@@ -145,6 +146,7 @@
     color: #fff;
     text-shadow: 0 2px 8px #000;
     font-weight: 900;
+    font-size: 14px;
     pointer-events: none;
   }
   .hud {
@@ -154,7 +156,7 @@
     right: 10px;
     bottom: max(10px, env(safe-area-inset-bottom));
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     gap: 8px;
     align-items: end;
     pointer-events: none;
@@ -163,25 +165,30 @@
     pointer-events: auto;
     background: rgba(255,255,255,.94);
     border-radius: 15px;
-    padding: 10px;
+    padding: 8px;
     min-width: 0;
   }
   .hud-card strong { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hud-card button, .decide {
     width: 100%;
-    margin-top: 8px;
+    margin-top: 6px;
     border: 0;
     border-radius: 13px;
-    min-height: 42px;
+    min-height: 38px;
     font-weight: 900;
+    font-size: 13px;
   }
   .hud-card button { background: #2f6f73; color: #fff; }
   .decide {
     pointer-events: auto;
     background: #c65f3a;
     color: #fff;
-    padding: 14px 18px;
+    padding: 10px 14px;
+    min-height: 42px;
+    white-space: nowrap;
   }
+  .ar-menu-toggle { background: rgba(47,111,115,.96) !important; color: #fff; }
+  body.ar-compact .hud { display: none; }
   .picker {
     display: none;
     position: fixed;
@@ -231,8 +238,43 @@
   .picker-item strong, .picker-item small { display: block; }
   @media (max-width: 720px) {
     .actions { grid-template-columns: 1fr; }
-    .hud { grid-template-columns: 1fr; }
-    .decide { order: 3; }
+    .top-controls {
+      grid-template-columns: auto auto auto;
+      right: auto;
+    }
+    .top-controls button {
+      min-height: 38px;
+      border-radius: 999px;
+      font-size: 12px;
+      padding: 8px 10px;
+    }
+    .status {
+      top: calc(56px + env(safe-area-inset-top));
+      left: 8px;
+      right: 8px;
+      font-size: 12px;
+    }
+    .hud {
+      left: 8px;
+      right: 8px;
+      bottom: max(8px, env(safe-area-inset-bottom));
+      grid-template-columns: 1fr 1fr;
+    }
+    .decide {
+      order: 3;
+      grid-column: 1 / -1;
+      min-height: 38px;
+    }
+    .hud-card strong { font-size: 13px; }
+    .hud-card button { min-height: 36px; }
+    .picker {
+      padding: 8px;
+    }
+    .picker-inner {
+      max-height: 68vh;
+      margin: 28vh auto 0;
+      border-radius: 20px 20px 0 0;
+    }
   }
 </style>
 </head>
@@ -279,6 +321,7 @@
   <div class="top-controls">
     <button id="closeAR" type="button">閉じる</button>
     <button id="cameraToggleAR" type="button">カメラ切替</button>
+    <button id="compactAR" class="ar-menu-toggle" type="button">操作を隠す</button>
   </div>
   <div class="status" id="statusText">カメラを準備しています</div>
   <div class="hud">
@@ -511,7 +554,8 @@
 
   function foodEntity(item, side) {
     const color = colorOf(item);
-    const x = side === 'left' ? '-.45' : '.45';
+    const x = side === 'left' ? '-1.05' : '1.05';
+    const yaw = side === 'left' ? '16' : '-16';
     const isRealistic = REALISTIC_MODEL_IDS.has(item.id);
     const steam = hot(item)
       ? `<a-entity position="0 .55 0">
@@ -520,15 +564,39 @@
         </a-entity>`
       : '';
     return `
-      <a-entity position="${x} 0 0" rotation="-12 ${side === 'left' ? '12' : '-12'} 0">
-        <a-circle radius="1.48" rotation="-90 0 0" position="0 .001 0" material="color:#000; opacity:.20; transparent:true; shader:flat"></a-circle>
-        <a-circle radius="1.18" rotation="-90 0 0" position="0 .003 0" material="color:#000; opacity:.07; transparent:true; shader:flat"></a-circle>
+      <a-entity class="food-slot" data-side="${side}" position="${x} 0 0" rotation="-10 ${yaw} 0" scale=".68 .68 .68">
+        <a-circle radius="1.18" rotation="-90 0 0" position="0 .001 0" material="color:#000; opacity:.18; transparent:true; shader:flat"></a-circle>
+        <a-circle radius=".92" rotation="-90 0 0" position="0 .003 0" material="color:#000; opacity:.06; transparent:true; shader:flat"></a-circle>
         <a-entity position="0 .18 0" animation__float="property: position; to: 0 .26 0; dir: alternate; dur: 2600; loop: true; easing: easeInOutSine">
           ${isRealistic ? realisticFoodModel(item) : fallbackFoodModel(item, color)}
           ${steam}
         </a-entity>
-        <a-text value="${item.name}" align="center" width="3.4" color="#fff" position="0 1.35 0" rotation="-18 0 0"></a-text>
+        <a-text value="${item.name}" align="center" width="3.0" color="#fff" position="0 1.42 0" rotation="-18 0 0"></a-text>
       </a-entity>`;
+  }
+
+  function ensureSceneAssets() {
+    const assets = document.querySelector('#arScene a-assets');
+    if (!assets) return;
+    [items[current.left], items[current.right]].filter(Boolean).forEach((item) => {
+      if (document.getElementById(`tex-${item.id}`)) return;
+      const img = document.createElement('img');
+      img.id = `tex-${item.id}`;
+      img.src = item.image;
+      img.crossOrigin = 'anonymous';
+      assets.appendChild(img);
+    });
+  }
+
+  function refreshARFoodEntities() {
+    const marker = document.getElementById('marker-main');
+    if (!marker) return;
+    ensureSceneAssets();
+    marker.innerHTML = `
+      ${foodEntity(items[current.left], 'left')}
+      ${foodEntity(items[current.right], 'right')}
+    `;
+    updateStatus();
   }
 
   function sceneHtml() {
@@ -693,11 +761,7 @@
         savePair();
         refreshLabels();
         if (arRunning) {
-          document.getElementById('arHost').innerHTML = sceneHtml();
-          window.setTimeout(() => {
-            bindMarkerEvents();
-            applyMobileVideoFixes();
-          }, 900);
+          refreshARFoodEntities();
         }
         closePicker();
       });
@@ -720,6 +784,12 @@
     }
   }
 
+  function toggleCompactAR() {
+    const compact = !document.body.classList.contains('ar-compact');
+    document.body.classList.toggle('ar-compact', compact);
+    document.getElementById('compactAR').textContent = compact ? '操作を表示' : '操作を隠す';
+  }
+
   document.querySelectorAll('.change-food').forEach((button) => {
     button.addEventListener('click', () => openPicker(button.dataset.side));
   });
@@ -729,6 +799,7 @@
   });
   document.getElementById('cameraToggle').addEventListener('click', toggleCamera);
   document.getElementById('cameraToggleAR').addEventListener('click', toggleCamera);
+  document.getElementById('compactAR').addEventListener('click', toggleCompactAR);
   document.getElementById('backTop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   document.getElementById('startAR').addEventListener('click', startAR);
   document.getElementById('closeAR').addEventListener('click', closeAR);
