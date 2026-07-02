@@ -119,15 +119,35 @@
     position: fixed;
     inset: 0;
     z-index: 100;
-    background: #000;
+    background:
+      radial-gradient(circle at 50% 36%, rgba(255,255,255,.16), transparent 34%),
+      linear-gradient(135deg, #18201d 0%, #0f1518 100%);
   }
   body.ar-active .setup { display: none; }
   body.ar-active .ar-layer { display: block; }
+  #cameraBackdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 101;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #111;
+  }
   #arHost, #arHost a-scene {
     position: fixed;
     inset: 0;
+    z-index: 105;
     width: 100%;
     height: 100%;
+  }
+  body.ar-active video:not(#cameraBackdrop),
+  #arHost video:not(#cameraBackdrop) {
+    opacity: 0 !important;
+  }
+  #arHost canvas,
+  #arHost .a-canvas {
+    background: transparent !important;
   }
   .top-controls {
     position: fixed;
@@ -332,6 +352,7 @@
 </main>
 
 <div class="ar-layer" id="arLayer">
+  <video id="cameraBackdrop" playsinline webkit-playsinline muted autoplay></video>
   <div id="arHost"></div>
   <div class="top-controls">
     <button id="closeAR" type="button">閉じる</button>
@@ -641,6 +662,35 @@
       </a-scene>`;
   }
 
+  async function startBackdropCamera() {
+    const video = document.getElementById('cameraBackdrop');
+    if (!video) return false;
+    if (video.srcObject && video.readyState >= 2) return true;
+    const facing = cameraMode() === 'environment' ? 'environment' : 'user';
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: facing },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      video.srcObject = stream;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      video.muted = true;
+      video.autoplay = true;
+      await video.play();
+      setStatus('カメラ背景を表示しています');
+      return true;
+    } catch (error) {
+      setStatus('カメラ許可を確認中');
+      setHelp('カメラ映像が出ない場合は、iPhoneの設定でSafari/Chromeのカメラ許可をオンにしてから、もう一度AR起動を押してください。');
+      return false;
+    }
+  }
+
   function stopCameraTracks() {
     document.querySelectorAll('video').forEach((video) => {
       const stream = video.srcObject;
@@ -691,7 +741,7 @@
     }, 12000);
   }
 
-  function startAR() {
+  async function startAR() {
     if (arRunning) return;
     const button = document.getElementById('startAR');
     if (!window.isSecureContext) {
@@ -708,6 +758,7 @@
     closeAR();
     document.body.classList.add('ar-active');
     setStatus('カメラを起動しています');
+    await startBackdropCamera();
     document.getElementById('arHost').innerHTML = sceneHtml();
     arRunning = true;
     watchCameraStartup();
