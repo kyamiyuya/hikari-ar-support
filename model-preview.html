@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GLBモデル調整プレビュー</title>
-<script src="real_models.js?v=20260702-realglb"></script>
+<title>GLBモデルプレビュー</title>
+<script src="real_models.js?v=20260702-glb50"></script>
+<script src="generated_glb_models.js?v=20260702-glb50"></script>
 <script src="photo_data.js?v=20260702-photo10"></script>
 <script src="menu_data.js?v=20260702-realglb"></script>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -45,7 +46,7 @@
     font: inherit;
     background: #fffdf8;
   }
-  textarea { min-height: 180px; font-family: ui-monospace, Consolas, monospace; }
+  textarea { min-height: 150px; font-family: ui-monospace, Consolas, monospace; }
   .grid3 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -97,17 +98,17 @@
 </head>
 <body>
 <main>
-  <h1>GLBモデル調整プレビュー</h1>
-  <p>3DスキャンしたGLBを本番ARに入れる前に、向き・大きさ・高さを確認するページです。ここで作った登録コードを <code>real_models.js</code> に貼ると、本番ARで実物GLBが表示されます。</p>
-  <div class="note">このページは確認用です。選んだGLBはブラウザ内で一時表示するだけで、GitHubへ自動保存はしません。</div>
+  <h1>GLBモデルプレビュー</h1>
+  <p>登録済みの全50メニューGLBを確認できます。別の本物GLBに差し替える場合は、ここで大きさ・向き・高さを先に確認してください。</p>
+  <div class="note">現在は軽量3Dモデルを登録済みです。施設の実物料理に近づける場合は、同じメニューIDのGLBを実スキャンや専門制作モデルへ置き換えます。</div>
 
   <div class="layout">
     <section class="panel">
-      <h2>登録内容</h2>
+      <h2>表示内容</h2>
       <label for="targetId">対象メニュー</label>
       <select id="targetId"></select>
 
-      <label for="glbFile">GLBファイルを選ぶ</label>
+      <label for="glbFile">別のGLBを試す</label>
       <input id="glbFile" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json">
 
       <label>大きさ scale</label>
@@ -117,14 +118,14 @@
         <input id="scaleZ" value=".9" inputmode="decimal">
       </div>
 
-      <label>回転 rotation</label>
+      <label>向き rotation</label>
       <div class="grid3">
         <input id="rotX" value="0" inputmode="decimal">
         <input id="rotY" value="0" inputmode="decimal">
         <input id="rotZ" value="0" inputmode="decimal">
       </div>
 
-      <label>位置 position</label>
+      <label>高さ position</label>
       <div class="grid3">
         <input id="posX" value="0" inputmode="decimal">
         <input id="posY" value=".12" inputmode="decimal">
@@ -136,7 +137,7 @@
         <button type="button" id="copyBtn" class="secondary">登録コードをコピー</button>
       </div>
 
-      <label for="snippet">real_models.js に貼る登録コード</label>
+      <label for="snippet">登録コード</label>
       <textarea id="snippet" readonly></textarea>
     </section>
 
@@ -154,7 +155,7 @@
   </div>
 
   <div class="actions">
-    <a href="3d-model-production.html">制作管理へ</a>
+    <a href="3d-model-production.html">登録状況へ</a>
     <a class="secondary" href="webar-camera.html">AR確認へ</a>
     <a class="secondary" href="choice-camera.html">選択画面へ</a>
   </div>
@@ -164,6 +165,7 @@
 (function () {
   const targets = window.REAL_MODEL_TARGETS || [];
   const items = window.MENU_ITEMS || [];
+  const models = window.REAL_MODEL_FILES || {};
   const target = document.getElementById('targetId');
   const file = document.getElementById('glbFile');
   const root = document.getElementById('modelRoot');
@@ -200,9 +202,11 @@
   function updatePreview() {
     buildSnippet();
     root.innerHTML = '';
-    if (!objectUrl) return;
+    const registered = models[target.value];
+    const src = objectUrl || (registered && registered.url);
+    if (!src) return;
     const model = document.createElement('a-gltf-model');
-    model.setAttribute('src', objectUrl);
+    model.setAttribute('src', src);
     model.setAttribute('scale', `${value('scaleX')} ${value('scaleY')} ${value('scaleZ')}`);
     model.setAttribute('rotation', `${value('rotX')} ${value('rotY')} ${value('rotZ')}`);
     model.setAttribute('position', `${value('posX')} ${value('posY')} ${value('posZ')}`);
@@ -215,7 +219,16 @@
     updatePreview();
   });
 
-  ['targetId', 'scaleX', 'scaleY', 'scaleZ', 'rotX', 'rotY', 'rotZ', 'posX', 'posY', 'posZ'].forEach((id) => {
+  target.addEventListener('change', () => {
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+      objectUrl = '';
+      file.value = '';
+    }
+    updatePreview();
+  });
+
+  ['scaleX', 'scaleY', 'scaleZ', 'rotX', 'rotY', 'rotZ', 'posX', 'posY', 'posZ'].forEach((id) => {
     document.getElementById(id).addEventListener('input', updatePreview);
     document.getElementById(id).addEventListener('change', updatePreview);
   });
@@ -233,6 +246,7 @@
   });
 
   buildSnippet();
+  updatePreview();
 })();
 </script>
 </body>
