@@ -1,0 +1,11 @@
+id,name,filename,status,notes
+shoyu_ramen,醤油ラーメン,assets/models/shoyu_ramen.glb,not_started,器と盛り付けを実提供に合わせる
+miso_ramen,味噌ラーメン,assets/models/miso_ramen.glb,not_started,湯気はAR演出で追加
+beef_curry,カレーライス,assets/models/beef_curry.glb,not_started,皿・ご飯・ルーの量を実物基準にする
+hamburg_steak,ハンバーグ,assets/models/hamburg_steak.glb,not_started,ソースの質感を撮影で残す
+omurice,オムライス,assets/models/omurice.glb,not_started,卵の表面とケチャップを重視
+fried_chicken_plate,唐揚げ定食,assets/models/fried_chicken_plate.glb,not_started,唐揚げ・皿・副菜まで含める
+udon,うどん,assets/models/udon.glb,not_started,つゆ面と麺の見え方を重視
+gyudon,牛丼,assets/models/gyudon.glb,not_started,ご飯と具の高さを実物基準にする
+katsudon,カツ丼,assets/models/katsudon.glb,not_started,カツの厚みと卵の質感を重視
+spaghetti,スパゲティ,assets/models/spaghetti.glb,not_started,麺の山の形を崩さず撮影する
