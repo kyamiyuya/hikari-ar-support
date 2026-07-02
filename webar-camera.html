@@ -86,7 +86,7 @@
     bottom: 10px;
     z-index: 30;
     display: grid;
-    grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 8px;
     margin-top: 18px;
     padding: 10px;
@@ -322,6 +322,7 @@
   <div class="actions" aria-label="WebAR操作">
     <button class="primary" id="startAR" type="button">カメラを許可してAR起動</button>
     <a class="secondary" href="マーカー印刷.html">マーカー印刷</a>
+    <a class="secondary" href="3d-model-production.html">3D登録</a>
     <button class="secondary" id="cameraToggle" type="button">カメラ: アウト</button>
     <button class="secondary" id="backTop" type="button">上へ戻る</button>
     <a class="secondary" href="choice-camera.html">選択画面へ</a>
