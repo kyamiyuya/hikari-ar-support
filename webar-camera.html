@@ -356,6 +356,13 @@
 <script>
 (function () {
   const items = window.MENU_ITEMS || [];
+  items.forEach((item) => {
+    const realModel = window.REAL_MODEL_FILES && window.REAL_MODEL_FILES[item.id];
+    item.modelUrl = realModel ? realModel.url : '';
+    item.modelScale = realModel ? realModel.scale : '';
+    item.modelRotation = realModel ? realModel.rotation : '';
+    item.modelPosition = realModel ? realModel.position : '';
+  });
   const STORAGE_KEY = 'senshakuSelectedIds';
   const CAMERA_KEY = 'senshakuCameraMode';
   const hotWords = ['あたたかい', 'カレー', 'めん', 'スープ', 'みそ', 'こってり'];
