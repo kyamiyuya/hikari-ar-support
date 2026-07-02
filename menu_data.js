@@ -238,6 +238,7 @@
 
   window.MENU_CATEGORIES = categories.map(([id, label, emoji, color]) => ({ id, label, emoji, color }));
   window.MENU_ITEMS = rawItems.map(([id, name, reading, category, emoji, tags]) => {
+    const realModel = window.REAL_MODEL_FILES && window.REAL_MODEL_FILES[id];
     const item = {
       id,
       name,
@@ -247,6 +248,10 @@
       categoryLabel: categoryById[category].label,
       emoji,
       color: categoryById[category].color,
+      modelUrl: realModel ? realModel.url : '',
+      modelScale: realModel ? realModel.scale : '',
+      modelRotation: realModel ? realModel.rotation : '',
+      modelPosition: realModel ? realModel.position : '',
       tags
     };
     item.image = svgFood(item);
