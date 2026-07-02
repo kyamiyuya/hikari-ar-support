@@ -198,7 +198,7 @@
     pointer-events: auto;
     background: rgba(255,255,255,.94);
     border-radius: 15px;
-    padding: 8px;
+    padding: 7px;
     min-width: 0;
   }
   .hud-card strong { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -292,6 +292,7 @@
       right: 8px;
       bottom: max(8px, env(safe-area-inset-bottom));
       grid-template-columns: 1fr 1fr;
+      gap: 6px;
     }
     .decide {
       order: 3;
@@ -299,7 +300,11 @@
       min-height: 38px;
     }
     .hud-card strong { font-size: 13px; }
-    .hud-card button { min-height: 36px; }
+    .hud-card button { min-height: 34px; }
+    .hud-card {
+      border-radius: 13px;
+      padding: 6px;
+    }
     .picker {
       padding: 8px;
     }
@@ -562,13 +567,34 @@
       <a-sphere radius=".04" position=".18 .61 -.14" ${material('#4d9a55')}></a-sphere>`;
   }
 
+  function stableFoodModel(item, color) {
+    if (item.id.includes('ramen') || item.id === 'tsukemen' || item.id === 'toshikoshi_soba') return ramenModel(item.id);
+    if (item.id === 'udon') return udonModel();
+    if (item.id.includes('curry')) return curryModel(item.id === 'katsu_curry');
+    if (item.id.includes('don') || item.id === 'fried_rice') return donModel(item.id);
+    if (item.id === 'hamburg_steak' || item.id === 'kids_plate' || item.id === 'gratin' || item.id.includes('facility')) return hamburgModel();
+    if (item.id === 'omurice') return omuriceModel();
+    if (item.id === 'fried_chicken_plate' || item.id === 'tempura' || item.id === 'fried_potato' || item.id === 'harumaki') return friedChickenModel();
+    if (item.id === 'spaghetti') return spaghettiModel();
+    return `
+      ${plate()}
+      <a-sphere radius=".40" scale="1.35 .34 .82" position="0 .34 0" ${material(color)}></a-sphere>
+      <a-sphere radius=".12" scale="1 .5 1" position="-.36 .42 .18" ${material('#f7f0da')}></a-sphere>
+      <a-sphere radius=".10" scale="1 .5 1" position=".32 .42 -.16" ${material('#6ea956')}></a-sphere>`;
+  }
+
   function registeredGlbModel(item) {
     if (!item.modelUrl) return '';
     const scale = item.modelScale || '.9 .9 .9';
     const rotation = item.modelRotation || '0 0 0';
     const position = item.modelPosition || '0 .12 0';
+    const color = colorOf(item);
     return `
+      <a-entity class="safe-food-model">
+        ${stableFoodModel(item, color)}
+      </a-entity>
       <a-gltf-model
+        class="glb-food-model"
         src="#model-${item.id}"
         position="${position}"
         rotation="${rotation}"
@@ -597,15 +623,35 @@
         </a-entity>`
       : '';
     return `
-      <a-entity class="food-slot" data-side="${side}" position="${x} 0 0" rotation="-10 ${yaw} 0" scale=".68 .68 .68">
-        <a-circle radius="1.18" rotation="-90 0 0" position="0 .001 0" material="color:#000; opacity:.18; transparent:true; shader:flat"></a-circle>
-        <a-circle radius=".92" rotation="-90 0 0" position="0 .003 0" material="color:#000; opacity:.06; transparent:true; shader:flat"></a-circle>
+      <a-entity class="food-slot" data-side="${side}" position="${x} 0 0" rotation="-10 ${yaw} 0" scale=".62 .62 .62">
+        <a-circle radius=".88" rotation="-90 0 0" position="0 .001 0" material="color:#000; opacity:.055; transparent:true; shader:flat"></a-circle>
+        <a-circle radius=".60" rotation="-90 0 0" position="0 .003 0" material="color:#000; opacity:.035; transparent:true; shader:flat"></a-circle>
         <a-entity position="0 .18 0" animation__float="property: position; to: 0 .26 0; dir: alternate; dur: 2600; loop: true; easing: easeInOutSine">
           ${hasRealModel ? registeredGlbModel(item) : photoReliefModel(item, color)}
           ${steam}
         </a-entity>
         <a-text value="${item.name}" align="center" width="3.0" color="#fff" position="0 1.42 0" rotation="-18 0 0"></a-text>
       </a-entity>`;
+  }
+
+  function cameraFoodEntity(item, side) {
+    const color = colorOf(item);
+    const x = side === 'left' ? '-.58' : '.58';
+    const yaw = side === 'left' ? '10' : '-10';
+    return `
+      <a-entity class="camera-food-slot" data-side="${side}" position="${x} -.34 -2.25" rotation="-14 ${yaw} 0" scale=".32 .32 .32">
+        <a-entity animation__float="property: position; to: 0 .08 0; dir: alternate; dur: 2200; loop: true; easing: easeInOutSine">
+          ${stableFoodModel(item, color)}
+        </a-entity>
+        <a-text value="${item.name}" align="center" width="2.4" color="#fff" position="0 1.22 0" rotation="-10 0 0"></a-text>
+      </a-entity>`;
+  }
+
+  function cameraFoodOverlayHtml() {
+    return `
+      ${cameraFoodEntity(items[current.left], 'left')}
+      ${cameraFoodEntity(items[current.right], 'right')}
+    `;
   }
 
   function ensureSceneAssets() {
@@ -629,12 +675,15 @@
 
   function refreshARFoodEntities() {
     const marker = document.getElementById('marker-main');
-    if (!marker) return;
     ensureSceneAssets();
-    marker.innerHTML = `
-      ${foodEntity(items[current.left], 'left')}
-      ${foodEntity(items[current.right], 'right')}
-    `;
+    if (marker) {
+      marker.innerHTML = `
+        ${foodEntity(items[current.left], 'left')}
+        ${foodEntity(items[current.right], 'right')}
+      `;
+    }
+    const overlay = document.getElementById('cameraFoodOverlay');
+    if (overlay) overlay.innerHTML = cameraFoodOverlayHtml();
     updateStatus();
   }
 
@@ -658,7 +707,11 @@
         </a-marker>
         <a-entity light="type: ambient; intensity: .72"></a-entity>
         <a-entity light="type: directional; intensity: .82" position="1 2 1"></a-entity>
-        <a-entity camera></a-entity>
+        <a-entity camera id="arCamera">
+          <a-entity id="cameraFoodOverlay">
+            ${cameraFoodOverlayHtml()}
+          </a-entity>
+        </a-entity>
       </a-scene>`;
   }
 
